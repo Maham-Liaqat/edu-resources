@@ -1,27 +1,38 @@
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import Resources from './pages/Resources'
+// src/App.jsx
+import { useEffect, useContext } from 'react';
+import { CssBaseline } from '@mui/material';
+import { BrowserRouter } from 'react-router-dom';
+// import { AuthProvider } from './contexts/AuthContext';
+import { AdminProvider, AdminContext } from './contexts/AdminContext';
+import AppLayout from './components/layout/AppLayout';
+import ErrorBoundary from './components/ErrorBoundary';
+import { HelmetProvider } from 'react-helmet-async';
 
-const theme = createTheme({
-  palette: {
-    primary: { main: '#2C3E50' },
-    secondary: { main: '#3498DB' },
-  },
-})
+function AuthWrapper() {
+  const { checkAuth } = useContext(AdminContext);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  return <AppLayout />;
+}
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <HelmetProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/resources" element={<Resources />} />
-        </Routes>
+        <CssBaseline />
+        
+          <ErrorBoundary>
+            <AdminProvider>
+        <AppLayout />
+      </AdminProvider>
+          </ErrorBoundary>
+        
       </BrowserRouter>
-    </ThemeProvider>
-  )
+    </HelmetProvider>
+  );
 }
 
-export default App
+export default App;
