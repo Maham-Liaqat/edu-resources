@@ -3,7 +3,6 @@ import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-// import astronautImage from ''; // Ensure this file exists
 
 const NotFound = () => {
   const navigate = useNavigate();

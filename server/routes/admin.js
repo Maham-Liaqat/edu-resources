@@ -1,61 +1,60 @@
+// server/routes/admin.js
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs'); // If using password hashing
+const Admin = require('../models/Admin'); // Import the Admin model
 
-// Admin Login Route
-// In routes/admin.js
-router.post('/login', (req, res) => {
-  // Add input validation
-  if (!req.body || !req.body.password) {
-    return res.status(400).json({ 
-      success: false,
-      message: 'Password is required' 
-    });
-  }
-
+// Admin login
+router.post('/login', async(req, res) => {
   const { password } = req.body;
-  
-  if (password === process.env.ADMIN_PASSWORD) {
-    // ... rest of your success logic
-  } else {
-    console.log(`Failed login attempt. Received: "${password}", Expected: "${process.env.ADMIN_PASSWORD}"`);
-    res.status(401).json({ 
-      success: false,
-      message: 'Invalid admin credentials' 
-    });
+
+  try {
+    // Query the database for an admin with the matching password
+    const admin = await Admin.findOne({}); // Adjust query based on your login logic (e.g., username if added)
+
+    if (!admin) {
+      return res.status(401).json({ success: false, message: 'No admin found' });
+    }
+
+    // Compare the provided password with the hashed password
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid password' });
+    }
+    // Generate JWT token
+    const token = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ success: true, token });
+  } catch (error) {
+    console.error('Login error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error during login' });
   }
 });
 
-router.get('/env-check', (req, res) => {
-  res.json({
-    adminPassword: process.env.ADMIN_PASSWORD ? "SET" : "MISSING",
-    jwtSecret: process.env.JWT_SECRET ? "SET" : "MISSING"
-  });
-});
 
-// Admin Verification Middleware
-const verifyAdmin = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  
+// Verify admin token
+router.get('/verify', (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    return res.status(401).json({
+      success: false,
+      message: 'No token provided',
+    });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== 'admin') {
-      throw new Error('Invalid admin privileges');
-    }
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Invalid or expired token' });
+    jwt.verify(token, process.env.JWT_SECRET);
+    res.json({
+      success: true,
+      message: 'Token is valid',
+    });
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: 'Invalid token',
+    });
   }
-};
-
-// Protected Admin Route Example
-router.get('/verify', verifyAdmin, (req, res) => {
-  res.json({ isValid: true, user: req.user });
 });
 
 module.exports = router;

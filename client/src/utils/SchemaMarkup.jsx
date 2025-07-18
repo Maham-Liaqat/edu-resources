@@ -1,3 +1,4 @@
+// src/utils/SchemaMarkup.jsx
 import React from 'react' // Required for JSX
 export const generateSchemaMarkup = ({ 
   type = "WebSite", 

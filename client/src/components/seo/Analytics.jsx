@@ -1,19 +1,28 @@
-import { React, useEffect } from 'react';
+// src/components/seo/Analytics.jsx
+import { useEffect } from 'react';
 
 export const Analytics = () => {
   useEffect(() => {
-    if (import.meta.env.PROD && import.meta.env.VITE_GA_ID) {
+    const gaId = import.meta.env.VITE_GA_ID;
+    if (import.meta.env.PROD && gaId) {
       const script = document.createElement('script');
       script.async = true;
-      script.src = `https://www.googletagmanager.com/gtag/js?id=${import.meta.env.VITE_GA_ID}`;
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
       document.head.appendChild(script);
 
       window.dataLayer = window.dataLayer || [];
-      function gtag(){ dataLayer.push(arguments); }
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
       gtag('js', new Date());
-      gtag('config', import.meta.env.VITE_GA_ID, {
-        page_path: window.location.pathname
+      gtag('config', gaId, {
+        page_path: window.location.pathname,
       });
+
+      // Cleanup script on component unmount
+      return () => {
+        document.head.removeChild(script);
+      };
     }
   }, []);
 

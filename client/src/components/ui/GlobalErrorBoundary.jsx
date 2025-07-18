@@ -1,5 +1,6 @@
 // src/components/ui/GlobalErrorBoundary.jsx
 import React from 'react';
+import LoadingScreen from './LoadingScreen';
 
 export default class GlobalErrorBoundary extends React.Component {
   state = { hasError: false };
@@ -15,7 +16,7 @@ export default class GlobalErrorBoundary extends React.Component {
 
   render() {
     return this.state.hasError
-      ? <div className="error-screen">Please refresh the page</div>
+      ? <LoadingScreen onRetry={() => window.location.reload()} />
       : this.props.children;
   }
 }

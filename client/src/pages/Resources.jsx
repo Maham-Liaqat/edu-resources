@@ -83,14 +83,14 @@ export default function Resources() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+      <Typography variant="h4" gutterBottom sx={{ mb: 3, color: '#28A745', fontWeight: 700 }}>
         Study Resources
       </Typography>
       
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
         {/* Filters Sidebar */}
         <Box sx={{ width: { md: 250 }, flexShrink: 0 }}>
-          <Typography variant="h6" gutterBottom>Filters</Typography>
+          <Typography variant="h6" gutterBottom sx={{ color: '#28A745', fontWeight: 600 }}>Filters</Typography>
           
           <TextField
             select
@@ -135,12 +135,14 @@ export default function Resources() {
                   <Chip 
                     label={`Level: ${filters.educationLevel}`}
                     onDelete={() => handleFilterChange('educationLevel', '')}
+                    sx={{ borderColor: '#28A745', color: '#28A745', fontWeight: 600 }}
                   />
                 )}
                 {filters.subject && (
                   <Chip 
                     label={`Subject: ${filters.subject}`}
                     onDelete={() => handleFilterChange('subject', '')}
+                    sx={{ borderColor: '#007BFF', color: '#007BFF', fontWeight: 600 }}
                   />
                 )}
               </Box>

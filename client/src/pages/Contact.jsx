@@ -1,3 +1,4 @@
+// src/pages/Contact.jsx
 import { useState, useRef } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { 
@@ -43,12 +44,6 @@ export default function Contact() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
-  const handleCaptchaExpired = () => {
-  setCaptchaValue(null);
-  setError('CAPTCHA expired. Please verify again.');
-};
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -114,7 +109,7 @@ export default function Contact() {
           align="center" 
           gutterBottom 
           sx={{ 
-            color: 'primary.main',
+            color: '#28A745',
             fontWeight: 700,
             mb: 4
           }}
@@ -219,7 +214,7 @@ export default function Contact() {
                 ref={recaptchaRef}
                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                 onChange={() => setCaptchaVerified(true)}
-                 onExpired={handleCaptchaExpired}
+                 onExpired={() => setCaptchaVerified(false)}
                 onErrored={() => setCaptchaVerified(false)}
                 sx={{ mb: 3 }}
               />
@@ -232,7 +227,10 @@ export default function Contact() {
                 disabled={loading || !captchaVerified}
                 sx={{ 
                   py: 1.5,
-                  fontSize: '1.1rem'
+                  fontSize: '1.1rem',
+                  bgcolor: '#28A745',
+                  color: '#fff',
+                  '&:hover': { bgcolor: '#218838' }
                 }}
               >
                 {loading ? (
@@ -249,15 +247,15 @@ export default function Contact() {
               sx={{ 
                 p: 4,
                 height: '100%',
-                bgcolor: 'primary.light',
-                color: 'primary.contrastText',
+                bgcolor: '#28A745',
+                color: '#fff',
                 borderRadius: 2,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center'
               }}
             >
-              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: '#fff' }}>
                 Contact Information
               </Typography>
               

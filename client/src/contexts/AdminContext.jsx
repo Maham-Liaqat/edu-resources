@@ -1,59 +1,69 @@
 // src/contexts/AdminContext.jsx
-import { createContext, useState } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import axios from '../api/axios';
+import { jwtDecode } from 'jwt-decode'; // Changed from 'import jwt from "jwt-decode";'
 
 export const AdminContext = createContext();
 
-export function AdminProvider({ children }) {
+export const AdminProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [adminToken, setAdminToken] = useState(localStorage.getItem('adminToken'));
 
   const login = async (password) => {
-     console.log("Attempting login with password:", password); // Add this line
     try {
-      // setLoading(true);
-      // setError('');
       const response = await axios.post('/api/admin/login', { password });
-       console.log("Server response:", response.data); // Add this line
-      
-      if (response.data.success) {
-        localStorage.setItem('adminToken', response.data.token);
-        setIsAdmin(true);
-        return true;
+      const token = response.data.token;
+      localStorage.setItem('adminToken', token);
+      setAdminToken(token); // Sync state with new token
+
+      // Decode token to verify payload
+      const decodedToken = jwtDecode(token); // Use jwtDecode instead of jwt
+      if (!decodedToken.id) {
+        throw new Error('Token does not contain a user ID');
       }
-      return false;
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
-      return false;
-    } finally {
-      setLoading(false);
+
+      setIsAdmin(true);
+      return true;
+    } catch (error) {
+      setIsAdmin(false);
+      throw new Error('Login failed. Please check your password or server status.');
     }
   };
 
   const logout = () => {
     localStorage.removeItem('adminToken');
+    setAdminToken(null); // Clear token state
     setIsAdmin(false);
   };
 
-  const checkAuth = async () => {
-    const token = localStorage.getItem('adminToken');
-    if (!token) return false;
-    
-    try {
-      const response = await axios.get('/api/admin/verify', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setIsAdmin(response.data.isValid);
-      return response.data.isValid;
-    } catch {
-      return false;
-    }
-  };
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem('adminToken');
+      if (token) {
+        try {
+          const response = await axios.get('/api/admin/verify', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setIsAdmin(true);
+          setAdminToken(token); // Ensure state matches localStorage
+        } catch (error) {
+          localStorage.removeItem('adminToken');
+          setAdminToken(null);
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    };
+
+    verifyToken();
+  }, []);
 
   return (
-    <AdminContext.Provider value={{ isAdmin, login, logout, checkAuth, loading, error }}>
+    <AdminContext.Provider value={{ isAdmin, login, logout, loading, adminToken }}>
       {children}
     </AdminContext.Provider>
   );
-}
+};

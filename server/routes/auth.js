@@ -1,40 +1,48 @@
 // server/routes/auth.js
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-
-// router.post('/register', async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     if (!email || !password) {
-//       return res.status(400).json({ message: 'Email and password are required' });
-//     }
-
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).json({ message: 'User already exists' });
-//     }
-
-//     const hashedPassword = await bcrypt.hash(password, 10);
-//     const user = new User({ email, password: hashedPassword });
-//     await user.save();
-
-//     res.status(201).json({ message: 'User registered successfully', user: { email: user.email } });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
-
-// // ... (login, me routes)
-router.post('/admin/login', async (req, res) => {
-  const { password } = req.body;
-  
-  if (password === process.env.ADMIN_PASSWORD) {
-    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET);
-    return res.json({ success: true, token });
+// Register
+router.post('/register', async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(409).json({ message: 'Email already in use.' });
+    }
+    const user = new User({ name, email, password });
+    await user.save();
+    res.status(201).json({ message: 'User registered successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.' });
   }
-  res.status(401).json({ success: false });
 });
+
+// Login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'All fields are required.' });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid credentials.' });
+    }
+    const token = jwt.sign({ id: user._id, name: user.name, email: user.email }, process.env.JWT_SECRET || 'devsecret', { expiresIn: '7d' });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.' });
+  }
+});
+
 module.exports = router;
